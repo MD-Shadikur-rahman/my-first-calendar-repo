@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Luxury Glass Calendar with Month Navigation</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@400;500&display=swap');
+
+    body {
+      background: linear-gradient(135deg, #000000, #1a1a1a, #0e0e0e);
+      color: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      overflow: hidden;
+    }
+
+    .calendar {
+      width: 420px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 215, 0, 0.4);
+      border-radius: 24px;
+      box-shadow: 0 0 35px rgba(255, 215, 0, 0.2), inset 0 0 15px rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      overflow: hidden;
+      transition: transform 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    .calendar:hover {
+      transform: scale(1.03);
+      box-shadow: 0 0 55px rgba(255, 215, 0, 0.45), inset 0 0 20px rgba(255, 255, 255, 0.08);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(90deg, #e6b800, #ffd700, #e6b800);
+      background-size: 200% 200%;
+      animation: goldFlow 6s ease infinite;
+      color: #121212;
+      padding: 20px 25px;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4em;
+      letter-spacing: 1px;
+      border-bottom: 1px solid rgba(255, 215, 0, 0.4);
+    }
+
+    .nav-btn {
+      cursor: pointer;
+      font-weight: bold;
+      color: #121212;
+      padding: 5px 12px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .nav-btn:hover {
+      background: gold;
+      color: #121212;
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+    }
+
+    @keyframes goldFlow {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      padding: 15px;
+      gap: 8px;
+    }
+
+    .day {
+      font-weight: 500;
+      color: gold;
+      text-transform: uppercase;
+      font-size: 0.85em;
+      letter-spacing: 0.5px;
+    }
+
+    .dates {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      padding: 0 15px 25px;
+      gap: 8px;
+    }
+
+    .date {
+      padding: 10px 0;
+      border-radius: 12px;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.05);
+      transition: all 0.4s ease;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+    }
+
+    .date::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle, rgba(255, 215, 0, 0.25), transparent 60%);
+      opacity: 0;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+      transform: scale(0.8);
+    }
+
+    .date:hover::before {
+      opacity: 1;
+      transform: scale(1.3);
+    }
+
+    .date:hover {
+      background: rgba(255, 215, 0, 0.25);
+      color: gold;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+      transform: translateY(-3px);
+    }
+
+    .today {
+      background: gold;
+      color: #121212;
+      font-weight: 700;
+      box-shadow: 0 0 25px rgba(255, 215, 0, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <div class="calendar">
+    <div class="header">
+      <div class="nav-btn" id="prevMonth">&#8592;</div>
+      <div id="monthYear"></div>
+      <div class="nav-btn" id="nextMonth">&#8594;</div>
+    </div>
+    <div class="days">
+      <div class="day">Sun</div>
+      <div class="day">Mon</div>
+      <div class="day">Tue</div>
+      <div class="day">Wed</div>
+      <div class="day">Thu</div>
+      <div class="day">Fri</div>
+      <div class="day">Sat</div>
+    </div>
+    <div class="dates" id="dates"></div>
+  </div>
+
+  <script>
+    const monthYear = document.getElementById("monthYear");
+    const datesContainer = document.getElementById("dates");
+    const prevBtn = document.getElementById("prevMonth");
+    const nextBtn = document.getElementById("nextMonth");
+
+    const months = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+
+    let now = new Date();
+    let displayMonth = now.getMonth();
+    let displayYear = now.getFullYear();
+
+    function renderCalendar(month, year) {
+      monthYear.textContent = `${months[month]} ${year}`;
+      datesContainer.innerHTML = "";
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const lastDate = new Date(year, month + 1, 0).getDate();
+
+      for (let i = 0; i < firstDay; i++) {
+        const empty = document.createElement("div");
+        empty.classList.add("date");
+        datesContainer.appendChild(empty);
+      }
+
+      for (let i = 1; i <= lastDate; i++) {
+        const dateEl = document.createElement("div");
+        dateEl.textContent = i;
+        dateEl.classList.add("date");
+
+        if (i === now.getDate() && month === now.getMonth() && year === now.getFullYear()) {
+          dateEl.classList.add("today");
+        }
+
+        datesContainer.appendChild(dateEl);
+      }
+    }
+
+    prevBtn.addEventListener("click", () => {
+      displayMonth--;
+      if (displayMonth < 0) {
+        displayMonth = 11;
+        displayYear--;
+      }
+      renderCalendar(displayMonth, displayYear);
+    });
+
+    nextBtn.addEventListener("click", () => {
+      displayMonth++;
+      if (displayMonth > 11) {
+        displayMonth = 0;
+        displayYear++;
+      }
+      renderCalendar(displayMonth, displayYear);
+    });
+
+    renderCalendar(displayMonth, displayYear);
+  </script>
+</body>
+</html>
